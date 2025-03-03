@@ -24,7 +24,7 @@ extension Endpoint {
     public var PUT:     REST { request(.PUT) }
     public var DELETE:  REST { request(.DELETE) }
     
-    func request(_ type: REST.HTTPMethod) -> REST {
+    public func request(_ type: REST.HTTPMethod) -> REST {
         REST(type)
         .url(url)
         .content(type: .JSON)
