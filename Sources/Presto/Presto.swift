@@ -57,7 +57,7 @@ public extension Presto {
 public struct PrestoError: Error {
     var name: String?
     var response: REST.Response?
-    init(name: String? = nil, _ response: REST.Response?) {
+    public init(name: String? = nil, _ response: REST.Response?) {
         self.name = name
         self.response = response
     }
