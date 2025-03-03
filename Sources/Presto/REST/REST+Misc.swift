@@ -26,9 +26,9 @@ extension REST {
     }
 }
 
-extension URL {
+internal extension URL {
     static let Apple: URL = URL(string: "https://apple.com")!
 }
-extension URLRequest {
+internal extension URLRequest {
     static let empty: URLRequest = .init(url: .Apple)
 }

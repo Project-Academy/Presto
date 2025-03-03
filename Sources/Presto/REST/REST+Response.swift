@@ -27,7 +27,7 @@ extension REST {
         //--------------------------------------
         public var json: JSON {
             guard let data,
-                  let obj = try? data.toJSON
+                  let obj = try? data.json
             else { return [:] }
             return obj
         }
@@ -51,24 +51,3 @@ extension REST {
 }
 
 
-public typealias JSON = Dictionary<String, Any>
-extension JSON {
-    
-    var data: Data {
-        get throws { try JSONSerialization.data(withJSONObject: self) }
-    }
-    func data(withOptions options: JSONSerialization.WritingOptions = []) throws -> Data {
-        try JSONSerialization.data(withJSONObject: self, options: options)
-    }
-    
-}
-extension Data {
-    
-    var toJSON: JSON {
-        get throws { try JSONSerialization.jsonObject(with: self, options: []) as! JSON }
-    }
-    func json(withOptions options: JSONSerialization.ReadingOptions = []) throws -> JSON? {
-        try JSONSerialization.jsonObject(with: self, options: []) as? JSON
-    }
-        
-}
