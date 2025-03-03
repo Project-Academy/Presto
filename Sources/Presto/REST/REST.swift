@@ -105,7 +105,7 @@ public struct REST: Sendable {
         self.type = type
         _req.httpMethod = type.rawValue
     }
-    internal init(_ req:     URLRequest)     {
+    public init(_ req:     URLRequest)     {
         _req = req
         type =  HTTPMethod.from(req.httpMethod)
     }
