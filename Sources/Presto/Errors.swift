@@ -16,6 +16,6 @@ public enum PrestoError: Error {
     case invalidURL
     /// Thrown when the `URLComponents` cannot be reconstructed into a valid URL after modifications.
     case urlConstructionFailure
+    /// Thrown when the HTTP response does not include a status code (i.e. the response is not an `HTTPURLResponse`).
     case noStatusCode
 }
-

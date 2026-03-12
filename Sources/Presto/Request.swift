@@ -26,6 +26,14 @@ public struct Request: Sendable {
     public var accepts: ContentType = .JSON
     public var content: ContentType = .JSON
     
+    /**
+     A closure that serializes the `params` dictionary into `Data` for the request body.
+     
+     By default this produces pretty-printed JSON. Override this property to use a custom
+     encoding strategy (e.g. compact JSON, a different key-naming convention, etc.).
+     
+     Only used when `content` is `.JSON`. Form-encoded bodies use `formatForm(_:)` instead.
+     */
     public var paramTransformer: (@Sendable ([String: Any]) throws -> Data) = { params in
         try JSONSerialization.data(withJSONObject: params, options: .prettyPrinted)
     }
@@ -33,6 +41,13 @@ public struct Request: Sendable {
     //--------------------------------------
     // MARK: - INITIALISERS -
     //--------------------------------------
+    /**
+     Creates a new `Request` with the given base URL and HTTP method.
+     
+     - Parameters:
+       - url: The endpoint URL for this request.
+       - method: The ``HTTPMethod`` to use (e.g. `.GET`, `.POST`).
+     */
     public init(url: URL, _ method: HTTPMethod) {
         baseURL = url
         urlRequest = URLRequest(url: url)
@@ -108,6 +123,17 @@ public struct Request: Sendable {
     //--------------------------------------
     // MARK: - BUILDER -
     //--------------------------------------
+    /**
+     Finalises the request by encoding all parameters and applying all headers to the underlying `URLRequest`.
+     
+     You do not need to call this manually when using ``response()`` or ``response(as:)``,
+     as they call `build()` internally. Use this directly if you need access to the
+     configured `URLRequest` before sending it.
+     
+     - Returns: A new ``Request`` with a fully configured `urlRequest`.
+     - Throws: ``PrestoError/invalidURL`` or ``PrestoError/urlConstructionFailure`` if the URL cannot be built,
+       or any error thrown by a custom `paramTransformer`.
+     */
     public func build() throws -> Self {
         try buildRequest()
     }
@@ -141,6 +167,14 @@ public struct Request: Sendable {
     //--------------------------------------
     // MARK: - RESPONSE -
     //--------------------------------------
+    /**
+     Builds and fires the request, returning the raw ``Response``.
+     
+     This method calls ``build()`` internally, so there is no need to call it separately.
+     
+     - Returns: A ``Response`` containing the response data and HTTP metadata.
+     - Throws: Any error from ``build()``, or a networking error from `URLSession`.
+     */
     @MainActor
     public func response() async throws -> Response {
         let urlReq = try build().urlRequest
@@ -148,6 +182,16 @@ public struct Request: Sendable {
         let response = Response(urlResp)
         return response
     }
+
+    /**
+     Builds and fires the request, then decodes the response body into the specified `Decodable` type.
+     
+     This is a convenience method equivalent to calling ``response()`` followed by ``Response/asType(_:)``.
+     
+     - Parameter type: The `Decodable` type to decode the response body into. Can often be inferred from context.
+     - Returns: A decoded instance of `T`.
+     - Throws: Any error from ``response()``, or a `DecodingError` if decoding fails.
+     */
     public func response<T: Decodable>(as type: T.Type = T.self) async throws -> T {
         let data = try await self.response().data
         return try JSONDecoder().decode(type, from: data)
