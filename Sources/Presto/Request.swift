@@ -175,7 +175,6 @@ public struct Request: Sendable {
      - Returns: A ``Response`` containing the response data and HTTP metadata.
      - Throws: Any error from ``build()``, or a networking error from `URLSession`.
      */
-    @MainActor
     public func response() async throws -> Response {
         let urlReq = try build().urlRequest
         let urlResp = try await URLSession.shared.data(for: urlReq)

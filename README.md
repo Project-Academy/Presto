@@ -126,7 +126,7 @@ The central type. All modifier methods return a new `Request` value (value seman
 | `content(type:headerKey:)` | Sets the `Content-Type` header. Defaults to `"Content-Type"`. |
 | `accepts(type:headerKey:)` | Sets the `Accept` header. Defaults to `"Accept"`. |
 | `build()` | Finalises the `URLRequest` (encodes params, applies headers). Returns a new `Request`. |
-| `response()` | Builds and fires the request. Returns a `Response`. Must be called on `@MainActor`. |
+| `response()` | Builds and fires the request. Returns a `Response`.|
 | `response(as:)` | Builds, fires, and decodes the response body into a `Decodable` type. |
 
 ### `Response`
@@ -182,7 +182,5 @@ request.paramTransformer = { params in
 ---
 
 ## Notes
-
-- `response()` is `@MainActor`-isolated. `response(as:)` is not, so it can be called from any actor.
 - Parameters of array type are correctly expanded into repeated query items (for GET) or repeated form fields (for `.Form` bodies).
 - Presto uses `URLSession.shared` internally. There is currently no way to provide a custom `URLSession`.
