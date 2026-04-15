@@ -68,11 +68,10 @@ public struct Response: Sendable {
 
     /**
      Attempts to deserialize the response body as a JSON object (`[String: Any]`).
-     Returns a dictionary containing an `"Error"` key if parsing fails.
+     Returns `nil` if the body is not a JSON dictionary (e.g. a JSON array, HTML, or empty).
      */
-    public var JSON: [String: Any] {
+    public var json: [String: Any]? {
         anyJSON as? [String: Any]
-        ?? ["Error": "Couldn't parse into JSON"]
     }
 
     /**

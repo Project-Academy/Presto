@@ -23,8 +23,7 @@ public struct Request: Sendable {
     //--------------------------------------
     public private(set) var headers: [String: String] = [:]
     public private(set) var params: [String: (any Sendable)] = [:]
-    public var accepts: ContentType = .JSON
-    public var content: ContentType = .JSON
+    private static let defaultContentType: ContentType = .JSON
     
     /**
      A closure that serializes the `params` dictionary into `Data` for the request body.
@@ -43,7 +42,7 @@ public struct Request: Sendable {
     //--------------------------------------
     /**
      Creates a new `Request` with the given base URL and HTTP method.
-     
+
      - Parameters:
        - url: The endpoint URL for this request.
        - method: The ``HTTPMethod`` to use (e.g. `.GET`, `.POST`).
@@ -53,6 +52,20 @@ public struct Request: Sendable {
         urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method.rawValue
         httpMethod = method
+    }
+
+    /**
+     Creates a new `Request` from a URL string and HTTP method.
+
+     - Parameters:
+       - urlString: The endpoint URL as a string.
+       - method: The ``HTTPMethod`` to use (e.g. `.GET`, `.POST`).
+     - Throws: ``PrestoError/invalidURL`` if the string is not a valid URL.
+     */
+    public init(_ urlString: String, _ method: HTTPMethod) throws {
+        guard let url = URL(string: urlString)
+        else { throw PrestoError.invalidURL }
+        self.init(url: url, method)
     }
     
     //--------------------------------------
@@ -94,30 +107,24 @@ public struct Request: Sendable {
     // MARK: - CONVENIENCE MODIFIERS -
     //--------------------------------------
     /**
-     Sets the content type for the request body.
+     Sets the "Content-Type" header for the request.
      
      - Parameters:
        - type: The desired ``ContentType`` (e.g., `.JSON`).
-       - headerKey: The name of the header field, defaulting to "Content-Type".
      - Returns: A new ``Request`` instance with updated content type.
      */
-    public func content(type: ContentType, headerKey: String = "Content-Type") -> Self {
-        var request = self
-        request.content = type
-        return request.setHeader(key: headerKey, value: type.rawValue)
+    public func content(type: ContentType) -> Self {
+        setHeader(key: "Content-Type", value: type.rawValue)
     }
     /**
-     Sets the 'Accept' header for the request, specifying the MIME type the client is willing to accept from the server.
+     Sets the 'Accept' header for the request.
      
      - Parameters:
        - type: The expected ``ContentType`` (e.g., `.JSON`) to receive from the server.
-       - headerKey: The name of the header field, defaulting to "Accept".
      - Returns: A new ``Request`` instance with updated content type.
      */
-    public func accepts(type: ContentType, headerKey: String = "Accept") -> Self {
-        var request = self
-        request.accepts = type
-        return request.setHeader(key: headerKey, value: type.rawValue)
+    public func accepts(type: ContentType) -> Self {
+        setHeader(key: "Accept", value: type.rawValue)
     }
     
     //--------------------------------------
@@ -151,12 +158,16 @@ public struct Request: Sendable {
         case .GET:
             try urlReq.updateURL(with: updated.params)
         default:
-            // Parse Parameters according to contentType.
-            switch updated.content {
+            let key = ContentType.contentKey
+            let contentHeader = updated.headers[key] ?? Self.defaultContentType.rawValue
+            if updated.headers[key] == nil {
+                urlReq.setHeader(key: key, value: contentHeader)
+            }
+            switch ContentType.from(contentHeader) {
             case .JSON:
-                urlReq.httpBody = try updated.paramTransformer(params)
+                urlReq.httpBody = try updated.paramTransformer(updated.params)
             case .Form:
-                urlReq.formatForm(params)
+                urlReq.formatForm(updated.params)
             default: break
             }
         }

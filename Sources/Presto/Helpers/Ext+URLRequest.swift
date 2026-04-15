@@ -104,22 +104,39 @@ extension URLRequest {
        - params: A `[String: Any]` dictionary of parameters to encode.
      - Returns: `Data` representing the form-encoded string (e.g., "key1=value1&key2=value2").
      */
+    private static let formAllowedCharacters: CharacterSet = {
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=+")
+        return allowed
+    }()
+
+    /**
+     Encodes a dictionary of parameters as a `application/x-www-form-urlencoded` body.
+
+     Uses a restricted character set that percent-encodes `&`, `=`, and `+` in both
+     keys and values. These characters are form-encoding delimiters and must not appear
+     literally inside field values:
+     - `&` separates fields — `"love it & want more"` would split into two fields
+     - `=` separates key from value — `"p@ss=word"` would truncate the value
+     - `+` means space in form encoding — `"C++"` would decode as `"C  "`
+
+     - Parameter params: A `[String: Any]` dictionary of parameters to encode.
+     */
     public mutating func formatForm(_ params: [String: Any]) {
         guard !params.isEmpty else { return }
+        let allowed = Self.formAllowedCharacters
 
         let query = params.flatMap { (key, anyValue) -> [String] in
-            // Handle arrays first: flatten them into multiple key=value pairs
             if let array = anyValue as? [CustomStringConvertible] {
                 return array.map { item in
-                    let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
-                    let encodedValue = String(describing: item).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(describing: item)
+                    let encodedKey = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
+                    let encodedValue = String(describing: item).addingPercentEncoding(withAllowedCharacters: allowed) ?? String(describing: item)
                     return "\(encodedKey)=\(encodedValue)"
                 }
             }
-            // Handle single values
             else if let value = anyValue as? CustomStringConvertible {
-                let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
-                let encodedValue = String(describing: value).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? String(describing: value)
+                let encodedKey = key.addingPercentEncoding(withAllowedCharacters: allowed) ?? key
+                let encodedValue = String(describing: value).addingPercentEncoding(withAllowedCharacters: allowed) ?? String(describing: value)
                 return ["\(encodedKey)=\(encodedValue)"]
             }
             return []
