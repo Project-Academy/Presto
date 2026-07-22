@@ -1,5 +1,14 @@
 # Presto
 
+> **⚠️ Superseded — this repository is archived and no longer maintained.**
+>
+> Presto now ships as the `Presto` target inside
+> [Tapioca](https://github.com/Project-Academy/Tapioca), where it is actively
+> maintained. The sources there are identical to this repository's.
+>
+> Depend on Tapioca instead — it is what MerakiKit, SlackKit, XeroKit and
+> VerkadaKit all use.
+
 A fluent wrapper on `URLRequest` that reduces REST calls to a single chain.
 
 ```swift
